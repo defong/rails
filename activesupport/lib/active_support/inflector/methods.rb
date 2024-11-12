@@ -89,19 +89,20 @@ module ActiveSupport
     #
     # Changes '::' to '/' to convert namespaces to paths.
     #
-    #   underscore('ActiveModel')         # => "active_model"
-    #   underscore('ActiveModel::Errors') # => "active_model/errors"
+    #   underscore('ActiveModel')                               # => "active_model"
+    #   underscore('ActiveModel::Errors')                       # => "active_model/errors"
+    #   underscore('This is not-for-profit', keep_hyphen: true) # => "this is not-for-profit"
     #
     # As a rule of thumb you can think of +underscore+ as the inverse of
     # #camelize, though there are cases where that does not hold:
     #
     #   camelize(underscore('SSLError'))  # => "SslError"
-    def underscore(camel_cased_word)
+    def underscore(camel_cased_word, keep_hyphen: false)
       return camel_cased_word.to_s.dup unless /[A-Z-]|::/.match?(camel_cased_word)
       word = camel_cased_word.to_s.gsub("::", "/")
       word.gsub!(inflections.acronyms_underscore_regex) { "#{$1 && '_' }#{$2.downcase}" }
       word.gsub!(/(?<=[A-Z])(?=[A-Z][a-z])|(?<=[a-z\d])(?=[A-Z])/, "_")
-      word.tr!("-", "_")
+      word.tr!("-", "_") unless keep_hyphen
       word.downcase!
       word
     end
@@ -186,11 +187,12 @@ module ActiveSupport
     #
     #   titleize('man from the boondocks')                       # => "Man From The Boondocks"
     #   titleize('x-men: the last stand')                        # => "X Men: The Last Stand"
+    #   titleize('x-men: the last stand', keep_hyphen: true)     # => "X-Men: The Last Stand"
     #   titleize('TheManWithoutAPast')                           # => "The Man Without A Past"
     #   titleize('raiders_of_the_lost_ark')                      # => "Raiders Of The Lost Ark"
     #   titleize('string_ending_with_id', keep_id_suffix: true)  # => "String Ending With Id"
-    def titleize(word, keep_id_suffix: false)
-      humanize(underscore(word), keep_id_suffix: keep_id_suffix).gsub(/\b(?<!\w['’`()])[a-z]/) do |match|
+    def titleize(word, keep_hyphen: false, keep_id_suffix: false)
+      humanize(underscore(word, keep_hyphen), keep_id_suffix: keep_id_suffix).gsub(/\b(?<!\w['’`()])[a-z]/) do |match|
         match.capitalize
       end
     end
